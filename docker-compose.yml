@@ -1,0 +1,31 @@
+version: '3.9'
+
+networks:
+  dev_network:
+
+services:
+  db:
+    image: postgres:14.3-alpine3.15
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: ${PG_DB}
+
+    networks:
+      dev_network:
+        aliases:
+          - ${PG_HOST}
+
+  app:
+    build:
+      context: ..
+    environment:
+      PG_DSN: 'postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}'
+    ports:
+      - '8000:8000'
+    depends_on:
+      - db
+    volumes:
+      - ./app:/app

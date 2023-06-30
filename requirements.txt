@@ -1,0 +1,10 @@
+flask
+Flask-Bcrypt
+psycopg2-binary
+pydantic
+SQLAlchemy==1.4.47
+requests
+gunicorn
+black
+isort
+uwsgi
