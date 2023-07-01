@@ -13,3 +13,14 @@ class CreateAd(BaseModel):
         if 65 < len(value) < 1:
             raise ValueError('Title should be from 1 to 65 characters')
         return value
+
+class UpdateAd(BaseModel):
+    title: str
+    description: str
+    owner: str
+
+    @validator("title")
+    def limit_length(cls, value):
+        if 65 < len(value) < 1:
+            raise ValueError('Title should be from 1 to 65 characters')
+        return value

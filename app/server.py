@@ -6,7 +6,7 @@ from flask.views import MethodView
 from sqlalchemy.exc import IntegrityError
 
 from models import Session, Ad
-from schema import CreateAd
+from schema import CreateAd, UpdateAd
 
 app = Flask("app")
 
@@ -53,7 +53,7 @@ class AdView(MethodView):
         try:
             json_data_validate = CreateAd(**json_data).dict()
         except pydantic.ValidationError as er:
-            raise HttpError(400, "error")
+            raise HTTPError(400, "error")
 
         with Session() as session:
             ads = Ad(**json_data_validate)
@@ -68,6 +68,31 @@ class AdView(MethodView):
                 }
             )
 
+    def patch(self, ad_id: str):
+        ad_up = Ad.query.get(ad_id)
+        if ad_up is not None:
+            try:
+                validate(request.json, UpdateAd)
+            except pydantic.ValidationError as er:
+                raise HTTPError(400, "error")
+
+            if request.json.get("title"):
+                ad_up.title = request.json.get("title")
+            if request.json.get("description"):
+                ad_up.description = request.json.get("description")
+            session.commit()
+            return jsonify(
+                {
+                    "id": ad_up.id,
+                    "title": ad_up.title,
+                    "description": ad_up.description,
+                }
+            )
+        else:
+            responce = jsonify({"error": "This ad does not exist"})
+            responce.status_code = 404
+            return responce
+
     def delete(self, ad_id: str):
         try:
             with Session() as session:
@@ -76,11 +101,11 @@ class AdView(MethodView):
                 session.commit()
                 return jsonify({"status": "deleted"})
         except pydantic.ValidationError as er:
-            raise HttpError(400, "error")
+            raise HTTPError(400, "error")
 
 app.add_url_rule(
     "/ads/<int:ad_id>/", view_func=AdView.as_view("ads_delete"),
-                 methods=["GET", "DELETE"]
+                 methods=["GET", "PATCH", "DELETE"]
 )
 app.add_url_rule(
     "/ads", view_func=AdView.as_view('ads_create'), methods=['POST']
